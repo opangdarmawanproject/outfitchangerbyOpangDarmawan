@@ -1,504 +1,630 @@
-<div id="cinematic-ai-app" class="cinematic-container">
-  
-  <div class="app-header">
-    <h2>Cinematic Outfit AI Studio</h2>
-    <p>Ubah penampilan, pose, dan lokasi Anda menjadi karakter film dunia secara instan.</p>
-  </div>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Main Dulu Sebentar - Tetris</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f4e1d2;
+            background-image: radial-gradient(#d5bdaf 1px, transparent 1px);
+            background-size: 20px 20px;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling on mobile */
+            touch-action: none; /* Prevent pinch zoom */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-  <div class="app-card configuration-box">
-    <h3><span class="step-badge">1</span> Pengaturan Akses AI Gratis Anda</h3>
-    <p class="instruction-text">
-      Aplikasi ini menggunakan kuota gratis pribadi Anda. Jika belum punya token, silakan buat gratis di 
-      <a href="https://huggingface.co/join" target="_blank" rel="noopener">Hugging Face</a> 
-      kemudian buka menu <strong>Settings > Access Tokens > New Token (Pilih tipe: Read)</strong>.
-    </p>
-    <div class="input-group">
-      <label for="hf-token">Masukkan Hugging Face Token Anda:</label>
-      <input type="password" id="hf-token" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-      <small class="secure-note">🔒 Token Anda aman, hanya disimpan secara lokal di browser Anda sendiri.</small>
-    </div>
-  </div>
+        .title-font {
+            font-family: 'Fredoka One', cursive;
+        }
 
-  <div class="workspace-grid">
-    
-    <div class="workspace-left">
-      <div class="app-card">
-        <h3><span class="step-badge">2</span> Upload Foto Anda</h3>
-        <div class="upload-area" id="drop-zone">
-          <input type="file" id="file-input" accept="image/*" hidden>
-          <div class="upload-placeholder" id="upload-placeholder">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-            <p>Klik atau Tarik Foto ke Sini</p>
-            <span>Format JPG/PNG, pastikan wajah terlihat jelas</span>
-          </div>
-          <img id="image-preview" class="hidden-element" alt="Preview">
-        </div>
-      </div>
+        .game-container {
+            background-color: #fffaf0;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(139, 90, 43, 0.2), inset 0 0 0 8px #eaddcf;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 100%;
+            max-height: 100%;
+        }
 
-      <div class="app-card">
-        <h3><span class="step-badge">3</span> Pilih Karakter Film</h3>
-        <div class="character-grid" id="character-selector">
-          </div>
-      </div>
-    </div>
+        canvas {
+            background-color: #fdf6e3;
+            border-radius: 12px;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+            border: 2px solid #d5bdaf;
+        }
 
-    <div class="workspace-right">
-      <div class="app-card result-card">
-        <h3><span class="step-badge">4</span> Hasil Studio Foto AI</h3>
-        
-        <div class="result-display">
-          <div id="loading-overlay" class="hidden-element">
-            <div class="spinner"></div>
-            <p id="loading-text">Sedang menjahit outfit AI Anda...</p>
-            <span class="loading-subtext">Proses ini memakan waktu sekitar 15-30 detik</span>
-          </div>
-
-          <div id="result-placeholder">
-            <p>Hasil foto sinematik Anda akan muncul di sini setelah proses generate selesai.</p>
-          </div>
-
-          <img id="result-image" class="hidden-element" alt="Cinematic Output">
-        </div>
-
-        <button id="generate-btn" class="btn btn-primary" disabled>Mulai Transformasi AI</button>
-        <button id="download-btn" class="btn btn-success hidden-element">Download Foto Hasil</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<style>
-:root {
-  --cinematic-bg: #111827;
-  --cinematic-card: #1f2937;
-  --cinematic-accent: #6366f1;
-  --cinematic-accent-hover: #4f46e5;
-  --cinematic-text: #f3f4f6;
-  --cinematic-text-muted: #9ca3af;
-  --cinematic-success: #10b981;
-  --cinematic-border: #374151;
-}
-
-#cinematic-ai-app {
-  background-color: var(--cinematic-bg);
-  color: var(--cinematic-text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  padding: 24px;
-  border-radius: 16px;
-  max-width: 1200px;
-  margin: 0 auto;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-}
-
-.app-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-.app-header h2 {
-  color: #ffffff;
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 700;
-}
-.app-header p {
-  color: var(--cinematic-text-muted);
-  margin: 0;
-}
-
-.app-card {
-  background-color: var(--cinematic-card);
-  border: 1px solid var(--cinematic-border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-.app-card h3 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.step-badge {
-  background-color: var(--cinematic-accent);
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.instruction-text {
-  font-size: 13px;
-  color: var(--cinematic-text-muted);
-  line-height: 1.5;
-  margin-top: 0;
-}
-.instruction-text a {
-  color: var(--cinematic-accent);
-  text-decoration: underline;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.input-group label {
-  font-size: 14px;
-  font-weight: 500;
-}
-.input-group input {
-  background-color: var(--cinematic-bg);
-  border: 1px solid var(--cinematic-border);
-  color: white;
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-size: 14px;
-}
-.secure-note {
-  font-size: 11px;
-  color: var(--cinematic-success);
-}
-
-.workspace-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-}
-@media (min-width: 768px) {
-  .workspace-grid { grid-template-columns: 1fr 1fr; }
-}
-
-.upload-area {
-  border: 2px dashed var(--cinematic-border);
-  border-radius: 8px;
-  padding: 30px;
-  text-align: center;
-  cursor: pointer;
-  background-color: rgba(0,0,0,0.1);
-  transition: border-color 0.2s;
-}
-.upload-area:hover { border-color: var(--cinematic-accent); }
-.upload-placeholder svg { stroke: var(--cinematic-text-muted); margin-bottom: 10px; }
-.upload-placeholder p { margin: 0 0 4px 0; font-weight: 500; }
-.upload-placeholder span { font-size: 12px; color: var(--cinematic-text-muted); }
-
-#image-preview {
-  max-height: 200px;
-  max-width: 100%;
-  border-radius: 6px;
-  margin: 0 auto;
-  display: block;
-}
-
-.character-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  max-height: 320px;
-  overflow-y: auto;
-  padding-right: 5px;
-}
-.character-item {
-  background-color: var(--cinematic-bg);
-  border: 1px solid var(--cinematic-border);
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.character-item:hover { border-color: var(--cinematic-text-muted); }
-.character-item.selected {
-  border-color: var(--cinematic-accent);
-  background-color: rgba(99, 102, 241, 0.1);
-}
-.character-item h4 { margin: 0 0 4px 0; font-size: 14px; color: #fff; }
-.character-item p { margin: 0; font-size: 11px; color: var(--cinematic-text-muted); line-height: 1.3; }
-
-.result-card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-.result-display {
-  flex-grow: 1;
-  background-color: var(--cinematic-bg);
-  border: 1px solid var(--cinematic-border);
-  border-radius: 8px;
-  min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-#result-placeholder {
-  padding: 40px;
-  text-align: center;
-  color: var(--cinematic-text-muted);
-  font-size: 14px;
-}
-#result-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* Loading Spinner */
-#loading-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(17, 24, 39, 0.85);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  text-align: center;
-  z-index: 10;
-}
-.spinner {
-  border: 4px solid rgba(255,255,255,0.1);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border-left-color: var(--cinematic-accent);
-  animation: spin 1s linear infinite;
-  margin-bottom: 12px;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#loading-text { font-weight: 500; margin: 0 0 4px 0; }
-.loading-subtext { font-size: 12px; color: var(--cinematic-text-muted); }
-
-/* Buttons */
-.btn {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-bottom: 8px;
-}
-.btn-primary { background-color: var(--cinematic-accent); color: white; }
-.btn-primary:hover:not(:disabled) { background-color: var(--cinematic-accent-hover); }
-.btn-primary:disabled { background-color: #4b5563; color: #9ca3af; cursor: not-allowed; }
-.btn-success { background-color: var(--cinematic-success); color: white; }
-.btn-success:hover { filter: brightness(1.1); }
-
-.hidden-element { display: none !important; }
-</style>
-
-<script>
-(function() {
-  // Data 10 Film Legendaris Dunia (Prompt dioptimalkan untuk menjaga akurasi realistik wajah asli)
-  const characters = [
-    { id: 1, name: "Iron Man (Tony Stark)", movie: "Avengers", desc: "Armor besi teknologi canggih, pose bersedekap dada di laboratorium Stark.", prompt: "photorealistic portrait, high-tech glowing iron armor suit, avengers laboratory background, standing confident pose, arms crossed gesture, hyper-detailed face, cinematic lighting, 8k resolution" },
-    { id: 2, name: "James Bond (007)", movie: "Casino Royale", desc: "Tuxedo hitam mewah, pose memegang gelas di kasino elit.", prompt: "photorealistic portrait, luxurious black tuxedo suit with bowtie, elegant royal casino background, holding a glass gesture, sharp look, cinematic edge-lighting, masterpiece, realistic texture" },
-    { id: 3, name: "Harry Potter", movie: "Hogwarts", desc: "Jubah Gryffindor & tongkat sihir, berlatar kastil Hogwarts.", prompt: "photorealistic portrait, wizarding black robe with Gryffindor crest, holding a magic wand gesture, magical Hogwarts castle background, cinematic dramatic atmosphere, realistic hair and skin" },
-    { id: 4, name: "Captain Jack Sparrow", movie: "Pirates of Caribbean", desc: "Pakaian bajak laut lengkap, pose menantang di dek kapal.", prompt: "photorealistic portrait, pirate captain outfit with leather hat, braided hair, black pearl ship deck background, confident smirk gesture, ocean sunset lighting, highly detailed fabrics" },
-    { id: 5, name: "Neo", movie: "The Matrix", desc: "Jubah kulit hitam panjang & kacamata hitam, pose bela diri.", prompt: "photorealistic portrait, long black leather trench coat, iconic dark sunglasses, digital matrix rain neon background, martial arts fighting stance gesture, ultra realistic cyberpunk style" },
-    { id: 6, name: "Barbie", movie: "Barbie World", desc: "Gaun modis warna pink cerah, pose melambaikan tangan ceria.", prompt: "photorealistic portrait, glamorous pink fashion dress, vibrant neon-pink Barbie Land background, waving hand gesture, bright volumetric lighting, flawless skin, high fidelity" },
-    { id: 7, name: "Indiana Jones", movie: "Raiders Ark", desc: "Topi fedora, jaket kulit tua, pose memegang senter di kuil kuno.", prompt: "photorealistic portrait, classic archeologist fedora hat, dusty brown leather jacket, ancient mystical temple background, holding a flashlight gesture, dramatic shadows, realistic look" },
-    { id: 8, name: "Joker", movie: "Joker (2019)", desc: "Setelan jas merah-ungu, makeup badut ikonik, pose menari di tangga.", prompt: "photorealistic portrait, Joaquin Phoenix joker red and purple suit, green hair, iconic clown face paint, dramatic dancing gesture, Gotham city stairs background, raw cinematic texture" },
-    { id: 9, name: "Maverick", movie: "Top Gun", desc: "Jaket penerbang militer & kacamata aviator, pose memberi hormat.", prompt: "photorealistic portrait, military flight bomber jacket with patches, aviator sunglasses, military hangar with fighter jet background, saluting gesture, realistic skin pores, sunny daylight lighting" },
-    { id: 10, name: "Wednesday Addams", movie: "Wednesday", desc: "Gaun gothic hitam berkerah putih, tatapan dingin datar.", prompt: "photorealistic portrait, black gothic dress with white collar, braided pigtails hair, Nevermore academy dark moody background, deadpan stare gesture, arms crossed, bleak color grading" }
-  ];
-
-  let selectedCharacter = null;
-  let uploadedBase64 = null;
-
-  // DOM Elements
-  const dropZone = document.getElementById('drop-zone');
-  const fileInput = document.getElementById('file-input');
-  const imagePreview = document.getElementById('image-preview');
-  const uploadPlaceholder = document.getElementById('upload-placeholder');
-  const characterSelector = document.getElementById('character-selector');
-  const generateBtn = document.getElementById('generate-btn');
-  const downloadBtn = document.getElementById('download-btn');
-  const hfTokenInput = document.getElementById('hf-token');
-  const loadingOverlay = document.getElementById('loading-overlay');
-  const resultPlaceholder = document.getElementById('result-placeholder');
-  const resultImage = document.getElementById('result-image');
-
-  // Inisialisasi: Tampilkan Pilihan Karakter & Ambil Token Tersimpan
-  function init() {
-    if(localStorage.getItem('user_hf_token')) {
-      hfTokenInput.value = localStorage.getItem('user_hf_token');
-    }
-
-    characters.forEach(char => {
-      const card = document.createElement('div');
-      card.className = 'character-item';
-      card.dataset.id = char.id;
-      card.innerHTML = `
-        <h4>${char.name}</h4>
-        <p><strong>Film:</strong> ${char.movie}</p>
-        <p>${char.desc}</p>
-      `;
-      card.addEventListener('click', () => selectCharacter(char.id, card));
-      characterSelector.appendChild(card);
-    });
-  }
-
-  // Pilih Karakter
-  function selectCharacter(id, element) {
-    document.querySelectorAll('.character-item').forEach(c => c.classList.remove('selected'));
-    element.classList.add('selected');
-    selectedCharacter = characters.find(c => c.id === id);
-    checkReadyState();
-  }
-
-  // Cek Status Kesiapan Tombol Generate
-  function checkReadyState() {
-    if (uploadedBase64 && selectedCharacter) {
-      generateBtn.removeAttribute('disabled');
-    } else {
-      generateBtn.setAttribute('disabled', 'true');
-    }
-  }
-
-  // Event Handler Upload Foto
-  dropZone.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', handleFileSelect);
-  
-  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--cinematic-accent)'; });
-  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--cinematic-border)'; });
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.style.borderColor = 'var(--cinematic-border)';
-    if(e.dataTransfer.files.length) {
-      fileInput.files = e.dataTransfer.files;
-      handleFileSelect();
-    }
-  });
-
-  // Memproses Foto yang Diupload & Mengompres Ukurannya (Biar Ringan & Cepat)
-  function handleFileSelect() {
-    const file = fileInput.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = new Image();
-      img.onload = function() {
-        // Kompres otomatis ke max 768px agar payload API tidak terlalu besar & proses render cepat
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const maxDim = 768;
-        
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height *= maxDim / width;
-            width = maxDim;
-          } else {
-            width *= maxDim / height;
-            height = maxDim;
-          }
+        .btn {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 #b38b6d;
         }
         
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        uploadedBase64 = canvas.toDataURL('image/jpeg', 0.85);
-        imagePreview.src = uploadedBase64;
-        imagePreview.classList.remove('hidden-element');
-        uploadPlaceholder.classList.add('hidden-element');
-        checkReadyState();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  // Logika Pemrosesan AI Image-to-Image (RealVisXL Model untuk Akurasi Maksimal Realistis)
-  generateBtn.addEventListener('click', async () => {
-    const token = hfTokenInput.value.trim();
-    if (!token) {
-      alert("Mohon masukkan Hugging Face Access Token Anda terlebih dahulu!");
-      hfTokenInput.focus();
-      return;
-    }
-    
-    // Simpan token ke browser user agar tidak perlu ketik ulang besok-besok
-    localStorage.setItem('user_hf_token', token);
-
-    loadingOverlay.classList.remove('hidden-element');
-    resultPlaceholder.classList.add('hidden-element');
-    resultImage.classList.add('hidden-element');
-    downloadBtn.classList.add('hidden-element');
-
-    try {
-      // Menggunakan model AI RealVisXL V4.0 (Model photorealistic terbaik saat ini di Hugging Face Serverless)
-      const modelEndpoint = "https://api-inference.huggingface.co/models/SG161222/RealVisXL_V4.0";
-      
-      // Bersihkan base64 string header untuk dikirim ke API
-      const cleanBase64 = uploadedBase64.split(',')[1];
-      
-      const payload = {
-        inputs: cleanBase64,
-        parameters: {
-          prompt: selectedCharacter.prompt,
-          negative_prompt: "deformed face, distorted facial features, bad anatomy, low quality, blurry, mutated hands, unrealistic, painting, drawing, cartoon",
-          strength: 0.55, // Mengubah 55% detail baju & background, mempertahankan 45% struktur wajah asli agar mirip.
-          guidance_scale: 7.5
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #b38b6d;
         }
-      };
 
-      const response = await fetch(modelEndpoint, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
+        .glass-overlay {
+            background: rgba(255, 250, 240, 0.85);
+            backdrop-filter: blur(5px);
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server AI merespon dengan kode error: ${response.status}`);
-      }
+        /* Mobile controls grid */
+        .mobile-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .control-btn {
+            background-color: #eaddcf;
+            border: 2px solid #d5bdaf;
+            border-radius: 12px;
+            padding: 15px 0;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #8b5a2b;
+            user-select: none;
+        }
 
-      const blob = await response.blob();
-      const outputUrl = URL.createObjectURL(blob);
-      
-      resultImage.src = outputUrl;
-      resultImage.classList.remove('hidden-element');
-      downloadBtn.classList.remove('hidden-element');
-      
-      // Setting download trigger
-      downloadBtn.onclick = () => {
-        const a = document.createElement('a');
-        a.href = outputUrl;
-        a.download = `cinematic_${selectedCharacter.name.toLowerCase().replace(/\s+/g, '_')}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      };
+        .control-btn:active {
+            background-color: #d5bdaf;
+        }
 
-    } catch (error) {
-      console.error(error);
-      alert(`Gagal memproses gambar:\n${error.message}\n\nTips: Pastikan Token Anda benar dan memiliki akses 'Read' yang valid.`);
-      resultPlaceholder.classList.remove('hidden-element');
-    } finally {
-      loadingOverlay.classList.add('hidden-element');
-    }
-  });
+        @media (min-width: 768px) {
+            .game-wrapper {
+                flex-direction: row;
+            }
+            .mobile-controls {
+                display: none;
+            }
+        }
+        @media (max-width: 767px) {
+            .game-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+            canvas#tetris {
+                height: 50vh;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
 
-  // Jalankan inisialisasi aplikasi saat elemen siap
-  init();
-})();
-</script>
+    <div class="game-container relative">
+        
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="title-font text-3xl md:text-4xl text-[#8b5a2b]">☕ Main Dulu Sebentar</h1>
+            <p class="text-sm text-[#b38b6d] font-bold mt-1">Santai aja, kerjaan nggak akan lari.</p>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-wrapper flex gap-4">
+            <!-- Left: Main Canvas -->
+            <div class="relative">
+                <canvas id="tetris" width="300" height="600"></canvas>
+                
+                <!-- Modals / Overlays -->
+                <div id="start-modal" class="absolute inset-0 glass-overlay rounded-xl flex flex-col justify-center items-center z-10 p-4 text-center">
+                    <h2 class="title-font text-2xl text-[#8b5a2b] mb-4">Siap Refreshing?</h2>
+                    <p class="text-[#8b5a2b] mb-6">Selesaikan 30 Baris (3 Level) untuk menang!</p>
+                    <button onclick="startGame()" class="btn bg-[#a3c9a8] hover:bg-[#8eb893] text-white title-font py-3 px-8 rounded-xl text-xl">Mulai Main</button>
+                </div>
+
+                <div id="pause-modal" class="absolute inset-0 glass-overlay rounded-xl flex flex-col justify-center items-center z-10 hidden">
+                    <h2 class="title-font text-3xl text-[#8b5a2b] mb-6">Jeda Dulu ⏸️</h2>
+                    <button onclick="togglePause()" class="btn bg-[#f4a261] hover:bg-[#e76f51] text-white title-font py-3 px-8 rounded-xl text-xl">Lanjut</button>
+                </div>
+
+                <div id="gameover-modal" class="absolute inset-0 glass-overlay rounded-xl flex flex-col justify-center items-center z-10 hidden">
+                    <h2 class="title-font text-3xl text-[#e76f51] mb-2">Yah, Penuh!</h2>
+                    <p class="text-[#8b5a2b] mb-6 font-bold">Level Mentok: <span id="final-level"></span></p>
+                    <button onclick="resetGame()" class="btn bg-[#eaddcf] hover:bg-[#d5bdaf] text-[#8b5a2b] title-font py-3 px-8 rounded-xl text-xl">Ulangi Lagi</button>
+                </div>
+
+                <div id="tamat-modal" class="absolute inset-0 glass-overlay rounded-xl flex flex-col justify-center items-center z-10 hidden p-4 text-center">
+                    <h2 class="title-font text-4xl text-[#a3c9a8] mb-2">TAMAT! 🎉</h2>
+                    <p class="text-[#8b5a2b] mb-6 font-bold">Kamu berhasil melewati 3 Level.<br>Sekarang balik kerja (atau main lagi)!</p>
+                    <button onclick="resetGame()" class="btn bg-[#8b5a2b] hover:bg-[#6c4622] text-white title-font py-3 px-8 rounded-xl text-xl">Main Lagi</button>
+                </div>
+            </div>
+
+            <!-- Right: Stats & Controls -->
+            <div class="flex flex-col gap-4 w-full md:w-32">
+                
+                <!-- Next Piece -->
+                <div class="bg-[#fdf6e3] p-3 rounded-xl border-2 border-[#d5bdaf] flex flex-col items-center">
+                    <p class="text-xs text-[#8b5a2b] font-bold mb-2 uppercase tracking-wide">Selanjutnya</p>
+                    <canvas id="next-piece" width="90" height="90"></canvas>
+                </div>
+
+                <!-- Stats -->
+                <div class="bg-[#fdf6e3] p-3 rounded-xl border-2 border-[#d5bdaf]">
+                    <div class="mb-3">
+                        <p class="text-xs text-[#b38b6d] font-bold uppercase">Skor</p>
+                        <p id="score-display" class="title-font text-xl text-[#8b5a2b]">0</p>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-xs text-[#b38b6d] font-bold uppercase">Baris</p>
+                        <p id="lines-display" class="title-font text-xl text-[#8b5a2b]">0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-[#b38b6d] font-bold uppercase">Level (Max 3)</p>
+                        <p id="level-display" class="title-font text-2xl text-[#e76f51]">1</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-row md:flex-col gap-2">
+                    <button onclick="togglePause()" class="btn flex-1 bg-[#f4a261] text-white font-bold py-2 px-4 rounded-xl">⏸️ Pause</button>
+                    <button onclick="resetGame()" class="btn flex-1 bg-[#eaddcf] text-[#8b5a2b] font-bold py-2 px-4 rounded-xl">🔄 Ulangi</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Mobile Controls (Visible only on small screens) -->
+        <div class="mobile-controls">
+            <button class="control-btn" id="btn-left">⬅️</button>
+            <button class="control-btn" id="btn-rotate">🔃</button>
+            <button class="control-btn" id="btn-right">➡️</button>
+            <div style="grid-column: span 3;">
+                <button class="control-btn" id="btn-down" style="width: 100%;">⬇️ Turun</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('tetris');
+        const context = canvas.getContext('2d');
+        const nextCanvas = document.getElementById('next-piece');
+        const nextContext = nextCanvas.getContext('2d');
+
+        // Scaling for crisp rendering
+        context.scale(30, 30);
+        nextContext.scale(30, 30);
+
+        const COLS = 10;
+        const ROWS = 20;
+        
+        // Colors corresponding to tetrominoes (Pastel aesthetic)
+        const COLORS = [
+            null,
+            '#a8d8ea', // I - Cyan pastel
+            '#aa96da', // J - Purple pastel
+            '#fcbad3', // L - Pink pastel
+            '#ffffd2', // O - Yellow pastel
+            '#a3c9a8', // S - Green pastel
+            '#f4a261', // T - Orange pastel
+            '#e76f51'  // Z - Red/Coral pastel
+        ];
+
+        const PIECES = [
+            [],
+            // I
+            [
+                [0, 1, 0, 0],
+                [0, 1, 0, 0],
+                [0, 1, 0, 0],
+                [0, 1, 0, 0],
+            ],
+            // J
+            [
+                [0, 2, 0],
+                [0, 2, 0],
+                [2, 2, 0],
+            ],
+            // L
+            [
+                [0, 3, 0],
+                [0, 3, 0],
+                [0, 3, 3],
+            ],
+            // O
+            [
+                [4, 4],
+                [4, 4],
+            ],
+            // S
+            [
+                [0, 5, 5],
+                [5, 5, 0],
+                [0, 0, 0],
+            ],
+            // T
+            [
+                [0, 0, 0],
+                [6, 6, 6],
+                [0, 6, 0],
+            ],
+            // Z
+            [
+                [7, 7, 0],
+                [0, 7, 7],
+                [0, 0, 0],
+            ],
+        ];
+
+        let board = createMatrix(COLS, ROWS);
+        let player = {
+            pos: {x: 0, y: 0},
+            matrix: null,
+        };
+        let nextPiece = null;
+        
+        let dropCounter = 0;
+        let dropInterval = 1000; // Base speed
+        let lastTime = 0;
+        let animationId;
+
+        // Stats
+        let score = 0;
+        let lines = 0;
+        let level = 1;
+
+        // States
+        let isPaused = false;
+        let isGameOver = false;
+        let isTamat = false;
+        let gameStarted = false;
+
+        function createMatrix(w, h) {
+            const matrix = [];
+            while (h--) {
+                matrix.push(new Array(w).fill(0));
+            }
+            return matrix;
+        }
+
+        function createPiece(type) {
+            return PIECES[type];
+        }
+
+        function drawMatrix(matrix, offset, ctx) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        ctx.fillStyle = COLORS[value];
+                        // Add slight shadow/border for aesthetic
+                        ctx.fillRect(x + offset.x, y + offset.y, 1, 1);
+                        ctx.lineWidth = 0.05;
+                        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                        ctx.strokeRect(x + offset.x, y + offset.y, 1, 1);
+                        
+                        // Inner highlight
+                        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                        ctx.fillRect(x + offset.x, y + offset.y, 1, 0.1);
+                        ctx.fillRect(x + offset.x, y + offset.y, 0.1, 1);
+                    }
+                });
+            });
+        }
+
+        function collide(board, player) {
+            const m = player.matrix;
+            const o = player.pos;
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 &&
+                       (board[y + o.y] && board[y + o.y][x + o.x]) !== 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function merge(board, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        board[y + player.pos.y][x + player.pos.x] = value;
+                    }
+                });
+            });
+        }
+
+        function clearLines() {
+            let linesCleared = 0;
+            outer: for (let y = board.length - 1; y >= 0; --y) {
+                for (let x = 0; x < board[y].length; ++x) {
+                    if (board[y][x] === 0) {
+                        continue outer;
+                    }
+                }
+
+                const row = board.splice(y, 1)[0].fill(0);
+                board.unshift(row);
+                ++y;
+                linesCleared++;
+            }
+
+            if (linesCleared > 0) {
+                // Scoring system
+                let points = 0;
+                if(linesCleared === 1) points = 100;
+                if(linesCleared === 2) points = 300;
+                if(linesCleared === 3) points = 500;
+                if(linesCleared === 4) points = 800; // Tetris!
+                
+                score += points * level;
+                lines += linesCleared;
+                
+                checkLevelUp();
+                updateStatsUI();
+            }
+        }
+
+        function checkLevelUp() {
+            // Level constraints:
+            // Level 1: 0-9 lines
+            // Level 2: 10-19 lines
+            // Level 3: 20-29 lines
+            // 30 Lines = TAMAT
+            
+            if (lines >= 30) {
+                triggerTamat();
+            } else if (lines >= 20) {
+                level = 3;
+                dropInterval = 400; // Fast
+            } else if (lines >= 10) {
+                level = 2;
+                dropInterval = 700; // Medium
+            } else {
+                level = 1;
+                dropInterval = 1000; // Slow
+            }
+        }
+
+        function triggerTamat() {
+            isTamat = true;
+            document.getElementById('tamat-modal').classList.remove('hidden');
+            cancelAnimationFrame(animationId);
+        }
+
+        function triggerGameOver() {
+            isGameOver = true;
+            document.getElementById('final-level').innerText = level;
+            document.getElementById('gameover-modal').classList.remove('hidden');
+            cancelAnimationFrame(animationId);
+        }
+
+        function playerDrop() {
+            if(isPaused || isGameOver || isTamat || !gameStarted) return;
+            player.pos.y++;
+            if (collide(board, player)) {
+                player.pos.y--;
+                merge(board, player);
+                playerReset();
+                clearLines();
+            }
+            dropCounter = 0;
+        }
+
+        function playerMove(offset) {
+            if(isPaused || isGameOver || isTamat || !gameStarted) return;
+            player.pos.x += offset;
+            if (collide(board, player)) {
+                player.pos.x -= offset;
+            }
+        }
+
+        function playerReset() {
+            if (nextPiece === null) {
+                nextPiece = createPiece(Math.floor(Math.random() * 7) + 1);
+            }
+            
+            player.matrix = nextPiece;
+            player.pos.y = 0;
+            player.pos.x = (Math.floor(COLS / 2)) - (Math.floor(player.matrix[0].length / 2));
+            
+            nextPiece = createPiece(Math.floor(Math.random() * 7) + 1);
+            drawNextPiece();
+
+            // Game Over check
+            if (collide(board, player)) {
+                triggerGameOver();
+            }
+        }
+
+        function playerRotate() {
+            if(isPaused || isGameOver || isTamat || !gameStarted) return;
+            const pos = player.pos.x;
+            let offset = 1;
+            rotate(player.matrix);
+            // Wall Kick logic
+            while (collide(board, player)) {
+                player.pos.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > player.matrix[0].length) {
+                    rotate(player.matrix, -1); // Undo rotation
+                    player.pos.x = pos;
+                    return;
+                }
+            }
+        }
+
+        function rotate(matrix, dir = 1) {
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            if (dir > 0) {
+                matrix.forEach(row => row.reverse());
+            } else {
+                matrix.reverse();
+            }
+        }
+
+        function drawNextPiece() {
+            nextContext.fillStyle = '#fdf6e3';
+            nextContext.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+            
+            // Center the next piece in the 3x3 (90px) canvas
+            const offset = {
+                x: 1.5 - nextPiece[0].length / 2,
+                y: 1.5 - nextPiece.length / 2
+            };
+            drawMatrix(nextPiece, offset, nextContext);
+        }
+
+        function draw() {
+            context.fillStyle = '#fdf6e3'; // Clear canvas
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid lines (subtle)
+            context.strokeStyle = 'rgba(213, 189, 175, 0.3)';
+            context.lineWidth = 0.05;
+            for(let i = 0; i <= COLS; i++) {
+                context.beginPath(); context.moveTo(i, 0); context.lineTo(i, ROWS); context.stroke();
+            }
+            for(let i = 0; i <= ROWS; i++) {
+                context.beginPath(); context.moveTo(0, i); context.lineTo(COLS, i); context.stroke();
+            }
+
+            drawMatrix(board, {x: 0, y: 0}, context);
+            
+            // Perbaikan: Pastikan matrix pemain sudah ada sebelum digambar
+            if (player.matrix) {
+                drawMatrix(player.matrix, player.pos, context);
+            }
+        }
+
+        function update(time = 0) {
+            if (!isPaused && !isGameOver && !isTamat && gameStarted) {
+                const deltaTime = time - lastTime;
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) {
+                    playerDrop();
+                }
+            }
+            
+            lastTime = time;
+            draw();
+            animationId = requestAnimationFrame(update);
+        }
+
+        function updateStatsUI() {
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('lines-display').innerText = lines;
+            document.getElementById('level-display').innerText = level;
+        }
+
+        function startGame() {
+            document.getElementById('start-modal').classList.add('hidden');
+            if(!gameStarted) {
+                resetGame();
+                gameStarted = true;
+                update();
+            }
+        }
+
+        function togglePause() {
+            if (isGameOver || isTamat || !gameStarted) return;
+            isPaused = !isPaused;
+            const modal = document.getElementById('pause-modal');
+            if (isPaused) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+                lastTime = performance.now(); // Prevent large time jump
+            }
+        }
+
+        function resetGame() {
+            board = createMatrix(COLS, ROWS);
+            score = 0;
+            lines = 0;
+            level = 1;
+            dropInterval = 1000;
+            isGameOver = false;
+            isTamat = false;
+            isPaused = false;
+            
+            document.getElementById('gameover-modal').classList.add('hidden');
+            document.getElementById('tamat-modal').classList.add('hidden');
+            document.getElementById('pause-modal').classList.add('hidden');
+            
+            updateStatsUI();
+            nextPiece = null;
+            playerReset();
+        }
+
+        document.addEventListener('keydown', event => {
+            if(isPaused || isGameOver || isTamat || !gameStarted) return;
+            switch (event.keyCode) {
+                case 37: // Left
+                    playerMove(-1);
+                    break;
+                case 39: // Right
+                    playerMove(1);
+                    break;
+                case 40: // Down
+                    playerDrop();
+                    break;
+                case 38: // Up / Rotate
+                    playerRotate();
+                    break;
+            }
+        });
+
+        // Mobile Controls
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
+        const btnRotate = document.getElementById('btn-rotate');
+        const btnDown = document.getElementById('btn-down');
+
+        // Helper to prevent default touch behaviors (like zooming) on buttons
+        const addTouchControl = (btn, action) => {
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                action();
+            });
+            // Fallback for mouse click on mobile view simulated in desktop
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                action();
+            });
+        };
+
+        addTouchControl(btnLeft, () => playerMove(-1));
+        addTouchControl(btnRight, () => playerMove(1));
+        addTouchControl(btnRotate, () => playerRotate());
+        
+        // Continuous drop while holding down button
+        let dropIntervalId;
+        const startDrop = () => {
+            playerDrop();
+            dropIntervalId = setInterval(playerDrop, 100); // Fast drop
+        };
+        const stopDrop = () => clearInterval(dropIntervalId);
+
+        btnDown.addEventListener('touchstart', (e) => { e.preventDefault(); startDrop(); });
+        btnDown.addEventListener('touchend', (e) => { e.preventDefault(); stopDrop(); });
+        btnDown.addEventListener('mousedown', (e) => { e.preventDefault(); startDrop(); });
+        btnDown.addEventListener('mouseup', (e) => { e.preventDefault(); stopDrop(); });
+        btnDown.addEventListener('mouseleave', (e) => { e.preventDefault(); stopDrop(); });
+
+        // Initial draw behind modal
+        draw();
+    </script>
+</body>
+</html>
