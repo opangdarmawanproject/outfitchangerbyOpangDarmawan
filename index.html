@@ -3,206 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎬 Movie Cinematic Style Changer</title>
+    <title>Cinematic Outfit AI</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #121212; 
-            color: #fff; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 30px 10px; 
-            margin: 0;
+        /* Desain UI Premium & Dark Mode */
+        .cinema-ai-container {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 30px;
+            background: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        h1 { text-align: center; color: #f39c12; font-size: 1.8rem; }
-        .container { 
-            background: #1e1e1e; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6); 
-            text-align: center; 
-            max-width: 500px; 
-            width: 100%; 
+        .cinema-ai-container h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #e50914; /* Warna merah ala bioskop/Netflix */
         }
-        select, input[type="file"], button { 
-            margin: 10px 0; 
-            padding: 12px; 
-            width: 100%; 
-            border-radius: 8px; 
-            border: 1px solid #333; 
-            font-size: 16px; 
-            box-sizing: border-box; 
-            background: #2a2a2a;
+        .cinema-ai-container label {
+            display: block;
+            margin: 15px 0 5px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #cccccc;
+        }
+        .cinema-ai-container input[type="text"],
+        .cinema-ai-container input[type="password"],
+        .cinema-ai-container select,
+        .cinema-ai-container input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #1e1e1e;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        .cinema-ai-container button {
+            width: 100%;
+            padding: 15px;
+            background: #e50914;
             color: white;
-        }
-        button { 
-            background-color: #f39c12; 
-            color: #121212; 
-            cursor: pointer; 
-            font-weight: bold; 
             border: none;
-            transition: all 0.3s ease; 
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 15px;
         }
-        button:hover { background-color: #e67e22; transform: scale(1.02); }
-        #downloadBtn { background-color: #27ae60; color: white; display: none; }
-        #downloadBtn:hover { background-color: #219150; }
-        canvas { 
-            max-width: 100%; 
-            margin-top: 20px; 
-            border: 2px solid #444; 
-            border-radius: 8px; 
-            display: none; 
+        .cinema-ai-container button:hover {
+            background: #b20710;
         }
-        .note { font-size: 13px; color: #aaa; margin-top: 20px; line-height: 1.5; }
+        .cinema-ai-container button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .result-box {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .result-box img {
+            max-width: 100%;
+            border-radius: 10px;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #e50914;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .disclaimer {
+            font-size: 11px;
+            color: #777;
+            text-align: center;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🎬 Movie Style Changer</h1>
-    <p>Unggah fotomu dan ubah nuansanya menjadi ala film Box Office!</p>
+<div class="cinema-ai-container">
+    <h2>🎬 Cinematic Outfit AI</h2>
+    
+    <label for="apiKey">Masukkan API Key Anda (Aman, tidak disimpan):</label>
+    <input type="password" id="apiKey" placeholder="Sk-xxxxxxxxxxxx..." required>
 
-    <input type="file" id="imageUpload" accept="image/*">
-
-    <select id="movieSelect">
-        <option value="matrix">1. The Matrix (Hacker Green Code)</option>
-        <option value="barbie">2. Barbie (Dreamhouse Pink)</option>
-        <option value="madmax">3. Mad Max (Wasteland Dust)</option>
-        <option value="mib">4. Men in Black (Agent Grayscale)</option>
-        <option value="potter">5. Harry Potter (Magical Warm Vintage)</option>
-        <option value="starwars">6. Star Wars (Jedi Blue/Red)</option>
-        <option value="oppenheimer">7. Oppenheimer (Cinematic B&W)</option>
-        <option value="jurassic">8. Jurassic Park (Jungle Green)</option>
-        <option value="tron">9. Tron: Legacy (Neon Cyan)</option>
-        <option value="godfather">10. The Godfather (Mobster Sepia)</option>
+    <label for="apiProvider">Pilih Penyedia API Anda:</label>
+    <select id="apiProvider">
+        <option value="stability">Stability AI</option>
+        <option value="replicate">Replicate</option>
+        <option value="custom">Custom Endpoint Lainya</option>
     </select>
 
-    <button id="applyBtn">Terapkan Gaya Film</button>
-    <button id="downloadBtn">Unduh Hasil Foto</button>
+    <label for="imageUpload">Upload Foto Anda (Wajah Terlihat Jelas):</label>
+    <input type="file" id="imageUpload" accept="image/png, image/jpeg, image/jpg" required>
 
-    <canvas id="canvas"></canvas>
+    <label for="movieSelect">Pilih Dunia Film Anda:</label>
+    <select id="movieSelect">
+        <option value="matrix">1. The Matrix (Trench coat hitam, kacamata hitam, dodging bullets, atap cyberpunk)</option>
+        <option value="titanic">2. Titanic (Pakaian elegan 1910-an, tangan terentang, ujung kapal saat matahari terbenam)</option>
+        <option value="harrypotter">3. Harry Potter (Jubah Hogwarts, memegang tongkat sihir, halaman kastil)</option>
+        <option value="starwars">4. Star Wars (Jubah Jedi, memegang lightsaber, kuda-kuda bertarung, planet futuristik)</option>
+        <option value="jamesbond">5. James Bond 007 (Tuxedo hitam klasik, pose memegang senjata, kasino mewah)</option>
+        <option value="spiderman">6. Spider-Man (Kostum merah biru, pose berjongkok siap melompat, gedung pencakar langit NY)</option>
+        <option value="pirates">7. Pirates of the Caribbean (Pakaian kapten bajak laut, topi tricorne, dek kapal bajak laut)</option>
+        <option value="joker">8. Joker (Setelan merah, kemeja hijau, pose menari ikonik, tangga kota kumuh)</option>
+        <option value="killbill">9. Kill Bill (Tracksuit kuning garis hitam, memegang pedang katana, dojo tradisional Jepang)</option>
+        <option value="mib">10. Men in Black (Setelan jas hitam rapi, kacamata hitam, memegang neuralyzer, markas agen rahasia)</option>
+    </select>
 
-    <p class="note"><b>Info Teknis:</b> Aplikasi ini menggunakan manipulasi piksel HTML5 Canvas untuk filter warna, bukan model AI Generatif (yang membutuhkan server backend & API Key berbayar).</p>
+    <button id="generateBtn" onclick="processImage()">Ubah Outfit Sekarang</button>
+
+    <div class="loader" id="loadingSpinner"></div>
+    
+    <div class="result-box">
+        <p id="statusText"></p>
+        <img id="resultImage" src="" alt="Hasil Cinematic AI">
+    </div>
+
+    <p class="disclaimer">Aplikasi ini memproses gambar langsung melalui browser Anda ke API Provider pilihan Anda. Data Anda 100% aman.</p>
 </div>
 
 <script>
-    const imageUpload = document.getElementById('imageUpload');
-    const movieSelect = document.getElementById('movieSelect');
-    const applyBtn = document.getElementById('applyBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+    // Konfigurasi Prompt Detail untuk masing-masing Film
+    const moviePrompts = {
+        matrix: "highly detailed portrait of a person wearing a long black leather trench coat and black sunglasses, leaning backwards in a slow-motion bullet dodge pose, cyberpunk dark rooftop background, green matrix code aesthetic, 8k resolution, cinematic lighting.",
+        titanic: "highly detailed portrait of a person wearing 1910s elegant vintage attire with suspenders, standing with arms spread wide open, standing at the bow of a massive classic cruise ship, beautiful sunset ocean background, romantic cinematic lighting.",
+        harrypotter: "highly detailed portrait of a person wearing a black Hogwarts wizard robe, holding a glowing magic wand, casting a spell dynamic pose, magical Hogwarts courtyard background at twilight, cinematic fantasy art.",
+        starwars: "highly detailed portrait of a person wearing rustic Jedi robes, holding a glowing lightsaber in a defensive combat stance, sci-fi futuristic planet background, epic sci-fi lighting, photorealistic.",
+        jamesbond: "highly detailed portrait of a person wearing a sharp classic black tuxedo, holding a small prop gun near the chest, elegant luxury casino background, sophisticated spy aesthetic, cinematic dramatic lighting.",
+        spiderman: "highly detailed portrait of a person wearing a red and blue superhero spider suit, crouching in a dynamic web-shooting pose, perched on a gargoyle overlooking New York city skyscrapers, sunset, epic comic book movie style.",
+        pirates: "highly detailed portrait of a person wearing a weathered pirate captain outfit, tricorne hat, leather coat, holding a compass, standing on the wooden deck of a pirate ship, misty ocean background, cinematic realistic.",
+        joker: "highly detailed portrait of a person wearing a vibrant red suit and green collared shirt, dramatic dancing pose on outdoor urban stairs, gritty Gotham city background, dramatic cinematic lighting.",
+        killbill: "highly detailed portrait of a person wearing a bright yellow tracksuit with black stripes on the side, holding a bloody katana sword in a combat stance, traditional Japanese dojo interior background, Quentin Tarantino cinematic style.",
+        mib: "highly detailed portrait of a person wearing a crisp black suit, white shirt, black tie, and dark sunglasses, holding a glowing silver neuralyzer device, secret futuristic white agency headquarters background, sci-fi realistic lighting."
+    };
 
-    let uploadedImg = new Image();
+    async function processImage() {
+        const apiKey = document.getElementById('apiKey').value;
+        const imageFile = document.getElementById('imageUpload').files[0];
+        const movieKey = document.getElementById('movieSelect').value;
+        const provider = document.getElementById('apiProvider').value;
+        
+        const generateBtn = document.getElementById('generateBtn');
+        const spinner = document.getElementById('loadingSpinner');
+        const statusText = document.getElementById('statusText');
+        const resultImage = document.getElementById('resultImage');
 
-    // Membaca file gambar
-    imageUpload.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                uploadedImg.src = event.target.result;
-            }
-            reader.readAsDataURL(file);
+        if (!apiKey) {
+            alert("Harap masukkan API Key Anda!");
+            return;
         }
-    });
-
-    // Menerapkan filter
-    applyBtn.addEventListener('click', function() {
-        if (!uploadedImg.src) {
-            alert("Silakan unggah foto terlebih dahulu!");
+        if (!imageFile) {
+            alert("Harap upload foto terlebih dahulu!");
             return;
         }
 
-        // Setup ukuran canvas menyesuaikan foto asli
-        canvas.width = uploadedImg.width;
-        canvas.height = uploadedImg.height;
-        canvas.style.display = 'block';
-        downloadBtn.style.display = 'block';
+        // Setup UI for Loading
+        generateBtn.disabled = true;
+        spinner.style.display = "block";
+        statusText.innerText = "Memproses foto Anda ke dunia film... (Tunggu 10-30 detik)";
+        statusText.style.color = "#fff";
+        resultImage.style.display = "none";
 
-        // Gambar foto asli ke canvas
-        ctx.drawImage(uploadedImg, 0, 0);
+        try {
+            // 1. Convert Image to Base64 (Syarat wajib untuk kirim gambar via API)
+            const base64Image = await toBase64(imageFile);
+            
+            // 2. Ambil Prompt yang sesuai
+            const selectedPrompt = moviePrompts[movieKey];
 
-        const movieStyle = movieSelect.value;
-        applyCinematicFilter(movieStyle);
-    });
+            // 3. Konfigurasi API Request
+            // CATATAN PENTING: Struktur di bawah ini adalah kerangka standar. 
+            // Setiap provider API (Stability, Replicate) memiliki struktur JSON body yang sedikit berbeda.
+            // Anda perlu menyesuaikan endpoint dan body sesuai dokumentasi API yang Anda gunakan.
+            
+            let apiUrl = "";
+            let requestBody = {};
+            let headers = {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`
+            };
 
-    function applyCinematicFilter(style) {
-        // Ambil data piksel
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-
-        // Loop melalui setiap piksel untuk mengubah warna (RGB)
-        for (let i = 0; i < data.length; i += 4) {
-            let r = data[i];
-            let g = data[i + 1];
-            let b = data[i + 2];
-
-            if (style === 'matrix') {
-                data[i] = r * 0.3;       // Kurangi merah
-                data[i+1] = g * 1.6;     // Tingkatkan hijau (tint The Matrix)
-                data[i+2] = b * 0.3;     // Kurangi biru
-            } else if (style === 'barbie') {
-                data[i] = r * 1.4;       // Merah jambu cerah
-                data[i+1] = g * 0.8;
-                data[i+2] = b * 1.2;
-            } else if (style === 'madmax') {
-                data[i] = r * 1.4;       // Oranye gurun
-                data[i+1] = g * 1.0;
-                data[i+2] = b * 0.4;
-            } else if (style === 'mib') {
-                let avg = (r + g + b) / 3;
-                data[i] = data[i+1] = data[i+2] = avg * 1.1; // Hitam putih tajam
-            } else if (style === 'oppenheimer') {
-                let avg = (r + g + b) / 3;
-                data[i] = data[i+1] = data[i+2] = avg * 0.8; // B&W gelap sinematik
-            } else if (style === 'potter') {
-                data[i] = r * 1.2;       // Vintage / Sepia hangat
-                data[i+1] = g * 1.0;
-                data[i+2] = b * 0.7;
-            } else if (style === 'starwars') {
-                data[i] = r * 0.5;
-                data[i+1] = g * 0.7;
-                data[i+2] = b * 1.6;     // Sci-fi Blue
-            } else if (style === 'jurassic') {
-                data[i] = r * 0.8;
-                data[i+1] = g * 1.3;     // Hijau rimba
-                data[i+2] = b * 0.6;
-            } else if (style === 'tron') {
-                data[i] = r * 0.3;
-                data[i+1] = g * 1.4;
-                data[i+2] = b * 1.6;     // Neon Cyan
-            } else if (style === 'godfather') {
-                // Formula warna Sepia klasik
-                data[i] = (r * 0.393) + (g * 0.769) + (b * 0.189);
-                data[i+1] = (r * 0.349) + (g * 0.686) + (b * 0.168);
-                data[i+2] = (r * 0.272) + (g * 0.534) + (b * 0.131);
+            if (provider === "stability") {
+                // Contoh Endpoint API Stability AI (Image-to-Image)
+                apiUrl = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image";
+                requestBody = {
+                    init_image: base64Image.split(',')[1], // Hanya ambil data base64 tanpa header data:image
+                    text_prompts: [
+                        { text: selectedPrompt, weight: 1 },
+                        { text: "ugly, blurry, bad anatomy, deformed face, cartoon, illustration", weight: -1 }
+                    ],
+                    cfg_scale: 7,
+                    image_strength: 0.35 // 0.35 berarti AI akan mengubah 65% gambar menjadi prompt film, tapi tetap menjaga struktur awal
+                };
+            } else {
+                // Jika pakai Replicate atau yang lain, ubah URL dan Body di sini
+                apiUrl = "MASUKKAN_URL_ENDPOINT_API_ANDA_DI_SINI";
+                requestBody = {
+                    prompt: selectedPrompt,
+                    image: base64Image
+                };
             }
-        }
-        
-        // Kembalikan piksel yang sudah diubah ke canvas
-        ctx.putImageData(imageData, 0, 0);
 
-        // Tambahkan Teks ala Poster Film di bagian bawah foto
-        const fontSize = Math.max(canvas.width * 0.04, 20);
-        ctx.fillStyle = "white";
-        ctx.font = `bold ${fontSize}px Arial`;
-        ctx.textAlign = "center";
-        ctx.shadowColor = "rgba(0,0,0,0.8)";
-        ctx.shadowBlur = 15;
-        
-        const textOptions = movieSelect.options[movieSelect.selectedIndex].text.split('(')[0].trim();
-        ctx.fillText(`STYLE: ${textOptions.toUpperCase()}`, canvas.width / 2, canvas.height - (fontSize));
+            // 4. Eksekusi API Call
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                throw new Error(`API Error: ${response.status} - ${errorData}`);
+            }
+
+            const data = await response.json();
+
+            // 5. Tampilkan Hasil (Asumsi API merespon dengan base64 gambar di array artifacts[0].base64)
+            // Sesuaikan parsing respons ini dengan format dari Provider API yang digunakan.
+            if (data && data.artifacts && data.artifacts.length > 0) {
+                const outputBase64 = data.artifacts[0].base64;
+                resultImage.src = `data:image/png;base64,${outputBase64}`;
+                resultImage.style.display = "block";
+                statusText.innerText = "Selesai! Berikut adalah gaya Cinematic Anda:";
+                statusText.style.color = "#00ff00";
+            } else {
+                throw new Error("Respons API tidak sesuai dengan format yang diharapkan.");
+            }
+
+        } catch (error) {
+            console.error(error);
+            statusText.innerText = `Terjadi kesalahan: ${error.message}`;
+            statusText.style.color = "#e50914";
+        } finally {
+            generateBtn.disabled = false;
+            spinner.style.display = "none";
+        }
     }
 
-    // Fitur Unduh Foto
-    downloadBtn.addEventListener('click', function() {
-        const link = document.createElement('a');
-        link.download = 'Cinematic_Movie_Style.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+    // Utility function untuk konversi file ke Base64
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
     });
 </script>
+
 </body>
 </html>
