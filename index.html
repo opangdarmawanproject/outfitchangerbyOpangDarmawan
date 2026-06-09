@@ -1,268 +1,504 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinematic Outfit AI</title>
-    <style>
-        /* Desain UI Premium & Dark Mode */
-        .cinema-ai-container {
-            max-width: 500px;
-            margin: 20px auto;
-            padding: 30px;
-            background: #121212;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .cinema-ai-container h2 {
-            text-align: center;
-            margin-top: 0;
-            color: #e50914; /* Warna merah ala bioskop/Netflix */
-        }
-        .cinema-ai-container label {
-            display: block;
-            margin: 15px 0 5px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #cccccc;
-        }
-        .cinema-ai-container input[type="text"],
-        .cinema-ai-container input[type="password"],
-        .cinema-ai-container select,
-        .cinema-ai-container input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: 1px solid #333;
-            border-radius: 8px;
-            background: #1e1e1e;
-            color: #fff;
-            box-sizing: border-box;
-        }
-        .cinema-ai-container button {
-            width: 100%;
-            padding: 15px;
-            background: #e50914;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
-            margin-top: 15px;
-        }
-        .cinema-ai-container button:hover {
-            background: #b20710;
-        }
-        .cinema-ai-container button:disabled {
-            background: #555;
-            cursor: not-allowed;
-        }
-        .result-box {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .result-box img {
-            max-width: 100%;
-            border-radius: 10px;
-            display: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        .loader {
-            display: none;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #e50914;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .disclaimer {
-            font-size: 11px;
-            color: #777;
-            text-align: center;
-            margin-top: 15px;
-        }
-    </style>
-</head>
-<body>
+<div id="cinematic-ai-app" class="cinematic-container">
+  
+  <div class="app-header">
+    <h2>Cinematic Outfit AI Studio</h2>
+    <p>Ubah penampilan, pose, dan lokasi Anda menjadi karakter film dunia secara instan.</p>
+  </div>
 
-<div class="cinema-ai-container">
-    <h2>🎬 Cinematic Outfit AI</h2>
+  <div class="app-card configuration-box">
+    <h3><span class="step-badge">1</span> Pengaturan Akses AI Gratis Anda</h3>
+    <p class="instruction-text">
+      Aplikasi ini menggunakan kuota gratis pribadi Anda. Jika belum punya token, silakan buat gratis di 
+      <a href="https://huggingface.co/join" target="_blank" rel="noopener">Hugging Face</a> 
+      kemudian buka menu <strong>Settings > Access Tokens > New Token (Pilih tipe: Read)</strong>.
+    </p>
+    <div class="input-group">
+      <label for="hf-token">Masukkan Hugging Face Token Anda:</label>
+      <input type="password" id="hf-token" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+      <small class="secure-note">🔒 Token Anda aman, hanya disimpan secara lokal di browser Anda sendiri.</small>
+    </div>
+  </div>
+
+  <div class="workspace-grid">
     
-    <label for="apiKey">Masukkan API Key Anda (Aman, tidak disimpan):</label>
-    <input type="password" id="apiKey" placeholder="Sk-xxxxxxxxxxxx..." required>
+    <div class="workspace-left">
+      <div class="app-card">
+        <h3><span class="step-badge">2</span> Upload Foto Anda</h3>
+        <div class="upload-area" id="drop-zone">
+          <input type="file" id="file-input" accept="image/*" hidden>
+          <div class="upload-placeholder" id="upload-placeholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <p>Klik atau Tarik Foto ke Sini</p>
+            <span>Format JPG/PNG, pastikan wajah terlihat jelas</span>
+          </div>
+          <img id="image-preview" class="hidden-element" alt="Preview">
+        </div>
+      </div>
 
-    <label for="apiProvider">Pilih Penyedia API Anda:</label>
-    <select id="apiProvider">
-        <option value="stability">Stability AI</option>
-        <option value="replicate">Replicate</option>
-        <option value="custom">Custom Endpoint Lainya</option>
-    </select>
-
-    <label for="imageUpload">Upload Foto Anda (Wajah Terlihat Jelas):</label>
-    <input type="file" id="imageUpload" accept="image/png, image/jpeg, image/jpg" required>
-
-    <label for="movieSelect">Pilih Dunia Film Anda:</label>
-    <select id="movieSelect">
-        <option value="matrix">1. The Matrix (Trench coat hitam, kacamata hitam, dodging bullets, atap cyberpunk)</option>
-        <option value="titanic">2. Titanic (Pakaian elegan 1910-an, tangan terentang, ujung kapal saat matahari terbenam)</option>
-        <option value="harrypotter">3. Harry Potter (Jubah Hogwarts, memegang tongkat sihir, halaman kastil)</option>
-        <option value="starwars">4. Star Wars (Jubah Jedi, memegang lightsaber, kuda-kuda bertarung, planet futuristik)</option>
-        <option value="jamesbond">5. James Bond 007 (Tuxedo hitam klasik, pose memegang senjata, kasino mewah)</option>
-        <option value="spiderman">6. Spider-Man (Kostum merah biru, pose berjongkok siap melompat, gedung pencakar langit NY)</option>
-        <option value="pirates">7. Pirates of the Caribbean (Pakaian kapten bajak laut, topi tricorne, dek kapal bajak laut)</option>
-        <option value="joker">8. Joker (Setelan merah, kemeja hijau, pose menari ikonik, tangga kota kumuh)</option>
-        <option value="killbill">9. Kill Bill (Tracksuit kuning garis hitam, memegang pedang katana, dojo tradisional Jepang)</option>
-        <option value="mib">10. Men in Black (Setelan jas hitam rapi, kacamata hitam, memegang neuralyzer, markas agen rahasia)</option>
-    </select>
-
-    <button id="generateBtn" onclick="processImage()">Ubah Outfit Sekarang</button>
-
-    <div class="loader" id="loadingSpinner"></div>
-    
-    <div class="result-box">
-        <p id="statusText"></p>
-        <img id="resultImage" src="" alt="Hasil Cinematic AI">
+      <div class="app-card">
+        <h3><span class="step-badge">3</span> Pilih Karakter Film</h3>
+        <div class="character-grid" id="character-selector">
+          </div>
+      </div>
     </div>
 
-    <p class="disclaimer">Aplikasi ini memproses gambar langsung melalui browser Anda ke API Provider pilihan Anda. Data Anda 100% aman.</p>
+    <div class="workspace-right">
+      <div class="app-card result-card">
+        <h3><span class="step-badge">4</span> Hasil Studio Foto AI</h3>
+        
+        <div class="result-display">
+          <div id="loading-overlay" class="hidden-element">
+            <div class="spinner"></div>
+            <p id="loading-text">Sedang menjahit outfit AI Anda...</p>
+            <span class="loading-subtext">Proses ini memakan waktu sekitar 15-30 detik</span>
+          </div>
+
+          <div id="result-placeholder">
+            <p>Hasil foto sinematik Anda akan muncul di sini setelah proses generate selesai.</p>
+          </div>
+
+          <img id="result-image" class="hidden-element" alt="Cinematic Output">
+        </div>
+
+        <button id="generate-btn" class="btn btn-primary" disabled>Mulai Transformasi AI</button>
+        <button id="download-btn" class="btn btn-success hidden-element">Download Foto Hasil</button>
+      </div>
+    </div>
+
+  </div>
 </div>
 
+<style>
+:root {
+  --cinematic-bg: #111827;
+  --cinematic-card: #1f2937;
+  --cinematic-accent: #6366f1;
+  --cinematic-accent-hover: #4f46e5;
+  --cinematic-text: #f3f4f6;
+  --cinematic-text-muted: #9ca3af;
+  --cinematic-success: #10b981;
+  --cinematic-border: #374151;
+}
+
+#cinematic-ai-app {
+  background-color: var(--cinematic-bg);
+  color: var(--cinematic-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding: 24px;
+  border-radius: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.app-header h2 {
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+.app-header p {
+  color: var(--cinematic-text-muted);
+  margin: 0;
+}
+
+.app-card {
+  background-color: var(--cinematic-card);
+  border: 1px solid var(--cinematic-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.app-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step-badge {
+  background-color: var(--cinematic-accent);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.instruction-text {
+  font-size: 13px;
+  color: var(--cinematic-text-muted);
+  line-height: 1.5;
+  margin-top: 0;
+}
+.instruction-text a {
+  color: var(--cinematic-accent);
+  text-decoration: underline;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.input-group label {
+  font-size: 14px;
+  font-weight: 500;
+}
+.input-group input {
+  background-color: var(--cinematic-bg);
+  border: 1px solid var(--cinematic-border);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.secure-note {
+  font-size: 11px;
+  color: var(--cinematic-success);
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 768px) {
+  .workspace-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.upload-area {
+  border: 2px dashed var(--cinematic-border);
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  background-color: rgba(0,0,0,0.1);
+  transition: border-color 0.2s;
+}
+.upload-area:hover { border-color: var(--cinematic-accent); }
+.upload-placeholder svg { stroke: var(--cinematic-text-muted); margin-bottom: 10px; }
+.upload-placeholder p { margin: 0 0 4px 0; font-weight: 500; }
+.upload-placeholder span { font-size: 12px; color: var(--cinematic-text-muted); }
+
+#image-preview {
+  max-height: 200px;
+  max-width: 100%;
+  border-radius: 6px;
+  margin: 0 auto;
+  display: block;
+}
+
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+.character-item {
+  background-color: var(--cinematic-bg);
+  border: 1px solid var(--cinematic-border);
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.character-item:hover { border-color: var(--cinematic-text-muted); }
+.character-item.selected {
+  border-color: var(--cinematic-accent);
+  background-color: rgba(99, 102, 241, 0.1);
+}
+.character-item h4 { margin: 0 0 4px 0; font-size: 14px; color: #fff; }
+.character-item p { margin: 0; font-size: 11px; color: var(--cinematic-text-muted); line-height: 1.3; }
+
+.result-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.result-display {
+  flex-grow: 1;
+  background-color: var(--cinematic-bg);
+  border: 1px solid var(--cinematic-border);
+  border-radius: 8px;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+#result-placeholder {
+  padding: 40px;
+  text-align: center;
+  color: var(--cinematic-text-muted);
+  font-size: 14px;
+}
+#result-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Loading Spinner */
+#loading-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(17, 24, 39, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  z-index: 10;
+}
+.spinner {
+  border: 4px solid rgba(255,255,255,0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border-left-color: var(--cinematic-accent);
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+#loading-text { font-weight: 500; margin: 0 0 4px 0; }
+.loading-subtext { font-size: 12px; color: var(--cinematic-text-muted); }
+
+/* Buttons */
+.btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 8px;
+}
+.btn-primary { background-color: var(--cinematic-accent); color: white; }
+.btn-primary:hover:not(:disabled) { background-color: var(--cinematic-accent-hover); }
+.btn-primary:disabled { background-color: #4b5563; color: #9ca3af; cursor: not-allowed; }
+.btn-success { background-color: var(--cinematic-success); color: white; }
+.btn-success:hover { filter: brightness(1.1); }
+
+.hidden-element { display: none !important; }
+</style>
+
 <script>
-    // Konfigurasi Prompt Detail untuk masing-masing Film
-    const moviePrompts = {
-        matrix: "highly detailed portrait of a person wearing a long black leather trench coat and black sunglasses, leaning backwards in a slow-motion bullet dodge pose, cyberpunk dark rooftop background, green matrix code aesthetic, 8k resolution, cinematic lighting.",
-        titanic: "highly detailed portrait of a person wearing 1910s elegant vintage attire with suspenders, standing with arms spread wide open, standing at the bow of a massive classic cruise ship, beautiful sunset ocean background, romantic cinematic lighting.",
-        harrypotter: "highly detailed portrait of a person wearing a black Hogwarts wizard robe, holding a glowing magic wand, casting a spell dynamic pose, magical Hogwarts courtyard background at twilight, cinematic fantasy art.",
-        starwars: "highly detailed portrait of a person wearing rustic Jedi robes, holding a glowing lightsaber in a defensive combat stance, sci-fi futuristic planet background, epic sci-fi lighting, photorealistic.",
-        jamesbond: "highly detailed portrait of a person wearing a sharp classic black tuxedo, holding a small prop gun near the chest, elegant luxury casino background, sophisticated spy aesthetic, cinematic dramatic lighting.",
-        spiderman: "highly detailed portrait of a person wearing a red and blue superhero spider suit, crouching in a dynamic web-shooting pose, perched on a gargoyle overlooking New York city skyscrapers, sunset, epic comic book movie style.",
-        pirates: "highly detailed portrait of a person wearing a weathered pirate captain outfit, tricorne hat, leather coat, holding a compass, standing on the wooden deck of a pirate ship, misty ocean background, cinematic realistic.",
-        joker: "highly detailed portrait of a person wearing a vibrant red suit and green collared shirt, dramatic dancing pose on outdoor urban stairs, gritty Gotham city background, dramatic cinematic lighting.",
-        killbill: "highly detailed portrait of a person wearing a bright yellow tracksuit with black stripes on the side, holding a bloody katana sword in a combat stance, traditional Japanese dojo interior background, Quentin Tarantino cinematic style.",
-        mib: "highly detailed portrait of a person wearing a crisp black suit, white shirt, black tie, and dark sunglasses, holding a glowing silver neuralyzer device, secret futuristic white agency headquarters background, sci-fi realistic lighting."
-    };
+(function() {
+  // Data 10 Film Legendaris Dunia (Prompt dioptimalkan untuk menjaga akurasi realistik wajah asli)
+  const characters = [
+    { id: 1, name: "Iron Man (Tony Stark)", movie: "Avengers", desc: "Armor besi teknologi canggih, pose bersedekap dada di laboratorium Stark.", prompt: "photorealistic portrait, high-tech glowing iron armor suit, avengers laboratory background, standing confident pose, arms crossed gesture, hyper-detailed face, cinematic lighting, 8k resolution" },
+    { id: 2, name: "James Bond (007)", movie: "Casino Royale", desc: "Tuxedo hitam mewah, pose memegang gelas di kasino elit.", prompt: "photorealistic portrait, luxurious black tuxedo suit with bowtie, elegant royal casino background, holding a glass gesture, sharp look, cinematic edge-lighting, masterpiece, realistic texture" },
+    { id: 3, name: "Harry Potter", movie: "Hogwarts", desc: "Jubah Gryffindor & tongkat sihir, berlatar kastil Hogwarts.", prompt: "photorealistic portrait, wizarding black robe with Gryffindor crest, holding a magic wand gesture, magical Hogwarts castle background, cinematic dramatic atmosphere, realistic hair and skin" },
+    { id: 4, name: "Captain Jack Sparrow", movie: "Pirates of Caribbean", desc: "Pakaian bajak laut lengkap, pose menantang di dek kapal.", prompt: "photorealistic portrait, pirate captain outfit with leather hat, braided hair, black pearl ship deck background, confident smirk gesture, ocean sunset lighting, highly detailed fabrics" },
+    { id: 5, name: "Neo", movie: "The Matrix", desc: "Jubah kulit hitam panjang & kacamata hitam, pose bela diri.", prompt: "photorealistic portrait, long black leather trench coat, iconic dark sunglasses, digital matrix rain neon background, martial arts fighting stance gesture, ultra realistic cyberpunk style" },
+    { id: 6, name: "Barbie", movie: "Barbie World", desc: "Gaun modis warna pink cerah, pose melambaikan tangan ceria.", prompt: "photorealistic portrait, glamorous pink fashion dress, vibrant neon-pink Barbie Land background, waving hand gesture, bright volumetric lighting, flawless skin, high fidelity" },
+    { id: 7, name: "Indiana Jones", movie: "Raiders Ark", desc: "Topi fedora, jaket kulit tua, pose memegang senter di kuil kuno.", prompt: "photorealistic portrait, classic archeologist fedora hat, dusty brown leather jacket, ancient mystical temple background, holding a flashlight gesture, dramatic shadows, realistic look" },
+    { id: 8, name: "Joker", movie: "Joker (2019)", desc: "Setelan jas merah-ungu, makeup badut ikonik, pose menari di tangga.", prompt: "photorealistic portrait, Joaquin Phoenix joker red and purple suit, green hair, iconic clown face paint, dramatic dancing gesture, Gotham city stairs background, raw cinematic texture" },
+    { id: 9, name: "Maverick", movie: "Top Gun", desc: "Jaket penerbang militer & kacamata aviator, pose memberi hormat.", prompt: "photorealistic portrait, military flight bomber jacket with patches, aviator sunglasses, military hangar with fighter jet background, saluting gesture, realistic skin pores, sunny daylight lighting" },
+    { id: 10, name: "Wednesday Addams", movie: "Wednesday", desc: "Gaun gothic hitam berkerah putih, tatapan dingin datar.", prompt: "photorealistic portrait, black gothic dress with white collar, braided pigtails hair, Nevermore academy dark moody background, deadpan stare gesture, arms crossed, bleak color grading" }
+  ];
 
-    async function processImage() {
-        const apiKey = document.getElementById('apiKey').value;
-        const imageFile = document.getElementById('imageUpload').files[0];
-        const movieKey = document.getElementById('movieSelect').value;
-        const provider = document.getElementById('apiProvider').value;
-        
-        const generateBtn = document.getElementById('generateBtn');
-        const spinner = document.getElementById('loadingSpinner');
-        const statusText = document.getElementById('statusText');
-        const resultImage = document.getElementById('resultImage');
+  let selectedCharacter = null;
+  let uploadedBase64 = null;
 
-        if (!apiKey) {
-            alert("Harap masukkan API Key Anda!");
-            return;
-        }
-        if (!imageFile) {
-            alert("Harap upload foto terlebih dahulu!");
-            return;
-        }
+  // DOM Elements
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+  const imagePreview = document.getElementById('image-preview');
+  const uploadPlaceholder = document.getElementById('upload-placeholder');
+  const characterSelector = document.getElementById('character-selector');
+  const generateBtn = document.getElementById('generate-btn');
+  const downloadBtn = document.getElementById('download-btn');
+  const hfTokenInput = document.getElementById('hf-token');
+  const loadingOverlay = document.getElementById('loading-overlay');
+  const resultPlaceholder = document.getElementById('result-placeholder');
+  const resultImage = document.getElementById('result-image');
 
-        // Setup UI for Loading
-        generateBtn.disabled = true;
-        spinner.style.display = "block";
-        statusText.innerText = "Memproses foto Anda ke dunia film... (Tunggu 10-30 detik)";
-        statusText.style.color = "#fff";
-        resultImage.style.display = "none";
-
-        try {
-            // 1. Convert Image to Base64 (Syarat wajib untuk kirim gambar via API)
-            const base64Image = await toBase64(imageFile);
-            
-            // 2. Ambil Prompt yang sesuai
-            const selectedPrompt = moviePrompts[movieKey];
-
-            // 3. Konfigurasi API Request
-            // CATATAN PENTING: Struktur di bawah ini adalah kerangka standar. 
-            // Setiap provider API (Stability, Replicate) memiliki struktur JSON body yang sedikit berbeda.
-            // Anda perlu menyesuaikan endpoint dan body sesuai dokumentasi API yang Anda gunakan.
-            
-            let apiUrl = "";
-            let requestBody = {};
-            let headers = {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`
-            };
-
-            if (provider === "stability") {
-                // Contoh Endpoint API Stability AI (Image-to-Image)
-                apiUrl = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image";
-                requestBody = {
-                    init_image: base64Image.split(',')[1], // Hanya ambil data base64 tanpa header data:image
-                    text_prompts: [
-                        { text: selectedPrompt, weight: 1 },
-                        { text: "ugly, blurry, bad anatomy, deformed face, cartoon, illustration", weight: -1 }
-                    ],
-                    cfg_scale: 7,
-                    image_strength: 0.35 // 0.35 berarti AI akan mengubah 65% gambar menjadi prompt film, tapi tetap menjaga struktur awal
-                };
-            } else {
-                // Jika pakai Replicate atau yang lain, ubah URL dan Body di sini
-                apiUrl = "MASUKKAN_URL_ENDPOINT_API_ANDA_DI_SINI";
-                requestBody = {
-                    prompt: selectedPrompt,
-                    image: base64Image
-                };
-            }
-
-            // 4. Eksekusi API Call
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.text();
-                throw new Error(`API Error: ${response.status} - ${errorData}`);
-            }
-
-            const data = await response.json();
-
-            // 5. Tampilkan Hasil (Asumsi API merespon dengan base64 gambar di array artifacts[0].base64)
-            // Sesuaikan parsing respons ini dengan format dari Provider API yang digunakan.
-            if (data && data.artifacts && data.artifacts.length > 0) {
-                const outputBase64 = data.artifacts[0].base64;
-                resultImage.src = `data:image/png;base64,${outputBase64}`;
-                resultImage.style.display = "block";
-                statusText.innerText = "Selesai! Berikut adalah gaya Cinematic Anda:";
-                statusText.style.color = "#00ff00";
-            } else {
-                throw new Error("Respons API tidak sesuai dengan format yang diharapkan.");
-            }
-
-        } catch (error) {
-            console.error(error);
-            statusText.innerText = `Terjadi kesalahan: ${error.message}`;
-            statusText.style.color = "#e50914";
-        } finally {
-            generateBtn.disabled = false;
-            spinner.style.display = "none";
-        }
+  // Inisialisasi: Tampilkan Pilihan Karakter & Ambil Token Tersimpan
+  function init() {
+    if(localStorage.getItem('user_hf_token')) {
+      hfTokenInput.value = localStorage.getItem('user_hf_token');
     }
 
-    // Utility function untuk konversi file ke Base64
-    const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
+    characters.forEach(char => {
+      const card = document.createElement('div');
+      card.className = 'character-item';
+      card.dataset.id = char.id;
+      card.innerHTML = `
+        <h4>${char.name}</h4>
+        <p><strong>Film:</strong> ${char.movie}</p>
+        <p>${char.desc}</p>
+      `;
+      card.addEventListener('click', () => selectCharacter(char.id, card));
+      characterSelector.appendChild(card);
     });
-</script>
+  }
 
-</body>
-</html>
+  // Pilih Karakter
+  function selectCharacter(id, element) {
+    document.querySelectorAll('.character-item').forEach(c => c.classList.remove('selected'));
+    element.classList.add('selected');
+    selectedCharacter = characters.find(c => c.id === id);
+    checkReadyState();
+  }
+
+  // Cek Status Kesiapan Tombol Generate
+  function checkReadyState() {
+    if (uploadedBase64 && selectedCharacter) {
+      generateBtn.removeAttribute('disabled');
+    } else {
+      generateBtn.setAttribute('disabled', 'true');
+    }
+  }
+
+  // Event Handler Upload Foto
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', handleFileSelect);
+  
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--cinematic-accent)'; });
+  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--cinematic-border)'; });
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = 'var(--cinematic-border)';
+    if(e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      handleFileSelect();
+    }
+  });
+
+  // Memproses Foto yang Diupload & Mengompres Ukurannya (Biar Ringan & Cepat)
+  function handleFileSelect() {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        // Kompres otomatis ke max 768px agar payload API tidak terlalu besar & proses render cepat
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 768;
+        
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height *= maxDim / width;
+            width = maxDim;
+          } else {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        uploadedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        imagePreview.src = uploadedBase64;
+        imagePreview.classList.remove('hidden-element');
+        uploadPlaceholder.classList.add('hidden-element');
+        checkReadyState();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Logika Pemrosesan AI Image-to-Image (RealVisXL Model untuk Akurasi Maksimal Realistis)
+  generateBtn.addEventListener('click', async () => {
+    const token = hfTokenInput.value.trim();
+    if (!token) {
+      alert("Mohon masukkan Hugging Face Access Token Anda terlebih dahulu!");
+      hfTokenInput.focus();
+      return;
+    }
+    
+    // Simpan token ke browser user agar tidak perlu ketik ulang besok-besok
+    localStorage.setItem('user_hf_token', token);
+
+    loadingOverlay.classList.remove('hidden-element');
+    resultPlaceholder.classList.add('hidden-element');
+    resultImage.classList.add('hidden-element');
+    downloadBtn.classList.add('hidden-element');
+
+    try {
+      // Menggunakan model AI RealVisXL V4.0 (Model photorealistic terbaik saat ini di Hugging Face Serverless)
+      const modelEndpoint = "https://api-inference.huggingface.co/models/SG161222/RealVisXL_V4.0";
+      
+      // Bersihkan base64 string header untuk dikirim ke API
+      const cleanBase64 = uploadedBase64.split(',')[1];
+      
+      const payload = {
+        inputs: cleanBase64,
+        parameters: {
+          prompt: selectedCharacter.prompt,
+          negative_prompt: "deformed face, distorted facial features, bad anatomy, low quality, blurry, mutated hands, unrealistic, painting, drawing, cartoon",
+          strength: 0.55, // Mengubah 55% detail baju & background, mempertahankan 45% struktur wajah asli agar mirip.
+          guidance_scale: 7.5
+        }
+      };
+
+      const response = await fetch(modelEndpoint, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server AI merespon dengan kode error: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const outputUrl = URL.createObjectURL(blob);
+      
+      resultImage.src = outputUrl;
+      resultImage.classList.remove('hidden-element');
+      downloadBtn.classList.remove('hidden-element');
+      
+      // Setting download trigger
+      downloadBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = outputUrl;
+        a.download = `cinematic_${selectedCharacter.name.toLowerCase().replace(/\s+/g, '_')}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+
+    } catch (error) {
+      console.error(error);
+      alert(`Gagal memproses gambar:\n${error.message}\n\nTips: Pastikan Token Anda benar dan memiliki akses 'Read' yang valid.`);
+      resultPlaceholder.classList.remove('hidden-element');
+    } finally {
+      loadingOverlay.classList.add('hidden-element');
+    }
+  });
+
+  // Jalankan inisialisasi aplikasi saat elemen siap
+  init();
+})();
+</script>
